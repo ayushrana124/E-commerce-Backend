@@ -7,6 +7,7 @@ import connectToDb from "./db/db.js";
 import authRoutes from "./routes/AuthRoutes.js";
 import categoryRoutes from "./routes/CategoryRoutes.js"
 import productRoutes from "./routes/ProductRoutes.js"
+import cartRoutes from "./routes/cartRoutes.js"
 import path from "path";
 import fileUpload from "express-fileupload";
 import { fileURLToPath } from "url";
@@ -36,11 +37,14 @@ app.use('/api/products', productRoutes);
 
 //Category Routes
 app.use('/api/category', categoryRoutes);
+
+//Cart Routes
+app.use("/api/cart", cartRoutes);
  
 //Upload route
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-//Routes
+
 app.get('/', (req, res) => {
     res.send("Server is live");
 })

@@ -19,6 +19,7 @@ export const deleteCategory = async (req, res) => {
     }
 
     category.status = "deleted";
+    await category.save();
 
     return res.status(200).json({ message: "Category marked as deleted" });
   } catch (error) {

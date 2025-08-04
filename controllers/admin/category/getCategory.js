@@ -2,7 +2,7 @@ import Category from "../../../models/category.js";
 
 export const getCategoryList = async (req, res) => {
   try {
-    const categories = await Category.find().select("name").sort({ name: 1 });
+    const categories = await Category.find({status : "active"}).select("name").sort({ name: 1 });
 
     if (!categories) {
       return res.status(404).json("No Category Exists");

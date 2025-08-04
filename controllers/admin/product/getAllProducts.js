@@ -8,48 +8,87 @@ export const getAllProducts = async (req, res) => {
 
     const { search, categoryName } = req.query;
 
-    const query = {};
+    const matchStage = {};
 
-    // ✅ Search by name or description (case-insensitive)
     if (search) {
-      query.$or = [
+      matchStage.$or = [
         { name: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
       ];
     }
 
-    // ✅ Filter by category name
+    // Match by category
     if (categoryName) {
-      const category = await Category.findOne({ name: categoryName });
-      if (category) {
-        query.category = category._id;
-      } else {
-        // No products if category doesn't exist
+      const category = await Category.findOne({ name: categoryName, status : "active" });
+      if (!category) {
         return res.status(200).json({
           success: true,
-          data: [],
           message: "No products found for this category.",
+          totalProducts: 0,
+          totalPages: 0,
+          data: [],
         });
       }
+      matchStage.category = category._id;
     }
 
-    const total = await Product.countDocuments(query);
+    matchStage.status = "active";
 
-    const products = await Product.find(query)
-      .populate("category", "name")
-      .sort({ createdAt: -1 }) // latest first
-      .skip((page - 1) * limit)
-      .limit(limit);
+    const aggregationPipeline = [
+      { $match: matchStage },
+
+      // Join category collection
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "categoryInfo",
+        },
+      },
+      { $unwind: "$categoryInfo" },
+
+      {
+        $project: {
+          name: 1,
+          price: 1,
+          description: 1,
+          imageUrl: 1,
+          countInStock: 1,
+          status: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          category: "$categoryInfo.name",
+        },
+      },
+
+      // Sort latest first
+      { $sort: { createdAt: -1 } },
+
+      // Pagination stages
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+    ];
+
+    const countPipeline = [{ $match: matchStage }, { $count: "total" }];
+
+    const [products, countResult] = await Promise.all([
+      Product.aggregate(aggregationPipeline),
+      Product.aggregate(countPipeline),
+    ]);
+
+    const total = countResult[0]?.total || 0;
+    const totalPages = Math.ceil(total / limit);
 
     res.status(200).json({
       success: true,
       currentPage: page,
-      totalPages: Math.ceil(total / limit),
+      totalPages,
       totalProducts: total,
       data: products,
     });
   } catch (error) {
-    console.error("❌ Error getting products:", error);
+    console.error("Error getting products:", error);
     res.status(500).json({ message: "Server error while fetching products." });
   }
 };
