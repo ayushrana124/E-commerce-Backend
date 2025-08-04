@@ -8,6 +8,7 @@ import authRoutes from "./routes/AuthRoutes.js";
 import categoryRoutes from "./routes/CategoryRoutes.js"
 import productRoutes from "./routes/ProductRoutes.js"
 import cartRoutes from "./routes/cartRoutes.js"
+import addressRoutes from "./routes/AddressRoutes.js"
 import path from "path";
 import fileUpload from "express-fileupload";
 import { fileURLToPath } from "url";
@@ -40,8 +41,11 @@ app.use('/api/category', categoryRoutes);
 
 //Cart Routes
 app.use("/api/cart", cartRoutes);
+
+//Address Routes
+app.use("/api/address", addressRoutes);
  
-//Upload route
+//Upload Images
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 

@@ -14,5 +14,4 @@ router.put("/:id", protect, isAdmin, updateProduct);
 //Common
 router.get("/getallproducts", protect, getAllProducts );
 
-
 export default router;
