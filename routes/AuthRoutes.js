@@ -10,6 +10,10 @@ const router = express.Router();
 router.post("/signup", signUpController);
 router.post("/signin", signInController);
 router.post("/signout", signOutController);
+router.get("/verify", protect, (req, res) => {
+  res.status(200).json({ success: true, user: req.user });
+});
+
 
 
 

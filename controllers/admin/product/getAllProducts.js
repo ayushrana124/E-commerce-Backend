@@ -62,10 +62,8 @@ export const getAllProducts = async (req, res) => {
         },
       },
 
-      // Sort latest first
       { $sort: { createdAt: -1 } },
 
-      // Pagination stages
       { $skip: (page - 1) * limit },
       { $limit: limit },
     ];

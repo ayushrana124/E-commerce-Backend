@@ -12,6 +12,6 @@ router.delete("/:id", protect, isAdmin, deleteProduct);
 router.put("/:id", protect, isAdmin, updateProduct);
 
 //Common
-router.get("/getallproducts", protect, getAllProducts );
+router.get("/getallproducts", getAllProducts );
 
 export default router;
