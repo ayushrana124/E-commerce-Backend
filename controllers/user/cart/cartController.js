@@ -1,5 +1,5 @@
-import Cart from "../../models/cartModel.js"
-import Product from "../../models/ProductModel.js";
+import Cart from "../../../models/cartModel.js"
+import Product from "../../../models/ProductModel.js";
 
 // calculate total price from cart items
 const calculateTotalPrice = async (items) => {
@@ -21,13 +21,18 @@ export const addToCart = async (req, res) => {
     const userId = req.user._id;
     const { productId, quantity } = req.body;
 
-    if (!productId || !quantity) {
-      return res.status(400).json("Product or quantity not selected");
+    if (!productId || ![-1, 1].includes(quantity)) {
+      return res.status(400).json({ message: "Invalid product or quantity" });
     }
 
     let cart = await Cart.findOne({ user: userId });
 
     if (!cart) {
+      // Only allow cart creation with positive quantity
+      if (quantity < 1) {
+        return res.status(400).json({ message: "Cannot create cart with negative quantity" });
+      }
+
       const totalPrice = await calculateTotalPrice([{ product: productId, quantity }]);
       cart = await Cart.create({
         user: userId,
@@ -40,27 +45,39 @@ export const addToCart = async (req, res) => {
       );
 
       if (itemIndex > -1) {
-        cart.items[itemIndex].quantity += quantity;
+        const updatedQty = cart.items[itemIndex].quantity + quantity;
+
+        if (updatedQty <= 0) {
+          // Remove item from cart if quantity becomes 0 or less
+          cart.items.splice(itemIndex, 1);
+        } else {
+          cart.items[itemIndex].quantity = updatedQty;
+        }
       } else {
-        cart.items.push({ product: productId, quantity });
+        // Only add new item if quantity is positive
+        if (quantity > 0) {
+          cart.items.push({ product: productId, quantity });
+        } else {
+          return res.status(400).json({ message: "Cannot reduce quantity of item not in cart" });
+        }
       }
 
       cart.totalPrice = await calculateTotalPrice(cart.items);
       await cart.save();
     }
 
-    // 3) populate before returning
     await cart.populate({
       path: "items.product",
       select: "-createdAt -updatedAt -status"
-
     });
 
     res.status(200).json({ success: true, cart });
+
   } catch (err) {
     res.status(500).json({ success: false, message: "Failed to add to cart", error: err.message });
   }
 };
+
 
 
 //  Get cart for a user

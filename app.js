@@ -4,14 +4,11 @@ import morgan from "morgan";
 import cors from "cors";
 import cookieParser from 'cookie-parser';
 import connectToDb from "./db/db.js";
-import authRoutes from "./routes/AuthRoutes.js";
-import categoryRoutes from "./routes/CategoryRoutes.js"
-import productRoutes from "./routes/ProductRoutes.js"
-import cartRoutes from "./routes/cartRoutes.js"
-import addressRoutes from "./routes/AddressRoutes.js"
 import path from "path";
 import fileUpload from "express-fileupload";
 import { fileURLToPath } from "url";
+import userRoutes from "./routes/userRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js"
 
 dotenv.config();
 connectToDb();
@@ -28,8 +25,6 @@ app.use(express.json());
 app.use(morgan("dev"));
 app.use(cookieParser());
 app.use(fileUpload());
-
-
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -37,24 +32,14 @@ app.use(
   })
 );
 
-//Auth Routes
-app.use("/api/auth", authRoutes);
+//USER ROUTES
+app.use("/api/user", userRoutes);
 
-//Product Routes
-app.use('/api/products', productRoutes);
-
-//Category Routes
-app.use('/api/category', categoryRoutes);
-
-//Cart Routes
-app.use("/api/cart", cartRoutes);
-
-//Address Routes
-app.use("/api/address", addressRoutes);
+//ADMIN ROUTES 
+app.use('/api/admin', adminRoutes);
  
 //Upload Images
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
 
 app.get('/', (req, res) => {
     res.send("Server is live");
